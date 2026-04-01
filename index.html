@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Presensi Otomatis - Pendidikan Fisika</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Face-api.js untuk deteksi wajah -->
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-area">
+                <img src="logo.png" alt="Logo Kampus" class="logo" id="logo" onerror="this.style.display='none'">
+            </div>
+            <div class="title-area">
+                <h1>PRESENSI OTOMATIS</h1>
+                <p>FPMIPA - Pendidikan Fisika</p>
+            </div>
+        </div>
+
+        <!-- Halaman Selamat Datang -->
+        <div id="welcomePage" class="welcome-page">
+            <div class="welcome-content">
+                <div class="greeting">
+                    <span class="wave">👋</span>
+                    <h2>HALO, MAHASISWA!</h2>
+                </div>
+                <p class="subtitle">Selamat datang di Sistem Presensi Otomatis</p>
+                <p class="description">FPMIPA - Program Studi Pendidikan Fisika</p>
+                
+                <div class="info-box">
+                    <span class="info-icon">⚠️</span>
+                    <p>Pastikan Anda berada di dalam kelas sebelum melakukan presensi.</p>
+                </div>
+
+                <div class="matkul-section">
+                    <h3>Silakan pilih mata kuliah yang akan Anda hadiri:</h3>
+                    <div class="matkul-list">
+                        <button class="matkul-btn" data-matkul="Teknologi dan Rekayasa dalam Pembelajaran Fisika">
+                            <span class="matkul-icon">📘</span>
+                            <span class="matkul-name">Teknologi dan Rekayasa dalam Pembelajaran Fisika</span>
+                            <span class="arrow">→</span>
+                        </button>
+                        <button class="matkul-btn" data-matkul="Listrik Magnet">
+                            <span class="matkul-icon">📗</span>
+                            <span class="matkul-name">Listrik Magnet</span>
+                            <span class="arrow">→</span>
+                        </button>
+                        <button class="matkul-btn" data-matkul="Gelombang Optik">
+                            <span class="matkul-icon">📙</span>
+                            <span class="matkul-name">Gelombang Optik</span>
+                            <span class="arrow">→</span>
+                        </button>
+                        <button class="matkul-btn" data-matkul="Strategi Pembelajaran">
+                            <span class="matkul-icon">📕</span>
+                            <span class="matkul-name">Strategi Pembelajaran</span>
+                            <span class="arrow">→</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Halaman Form Presensi -->
+        <div id="presensiPage" class="presensi-page" style="display: none;">
+            <div class="back-button">
+                <button id="backBtn" class="back-btn">← Kembali ke Daftar Mata Kuliah</button>
+            </div>
+            
+            <div class="form-card">
+                <div class="selected-matkul">
+                    <span class="label">Mata Kuliah:</span>
+                    <span id="selectedMatkul" class="value">-</span>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 NIM</label>
+                    <input type="text" id="nim" placeholder="Contoh: 20230810001" maxlength="20" required>
+                </div>
+
+                <div class="form-group">
+                    <label>👤 Nama Lengkap</label>
+                    <input type="text" id="nama" placeholder="Contoh: Budi Santoso" maxlength="100" required>
+                </div>
+
+                <div class="camera-section">
+                    <label>📸 Foto Selfie (Wajib)</label>
+                    <div class="camera-preview">
+                        <video id="video" autoplay playsinline></video>
+                        <canvas id="canvas"></canvas>
+                    </div>
+                    <button type="button" id="ambilFotoBtn" class="btn-camera">📷 Ambil Foto</button>
+                    <div id="photoResult" class="photo-result" style="display: none;">
+                        <p>✓ Foto berhasil diambil</p>
+                    </div>
+                </div>
+
+                <button type="button" id="submitBtn" class="btn-submit" disabled>✅ Kirim Presensi</button>
+                
+                <div id="statusMessage" class="status"></div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>© 2026 FPMIPA - Program Studi Pendidikan Fisika</p>
+            <p class="footer-note">Sistem Presensi Otomatis Berbasis Web dengan Deteksi Wajah</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
