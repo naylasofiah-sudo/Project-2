@@ -1,0 +1,405 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* ========== HEADER ========== */
+.header {
+    background: linear-gradient(135deg, #0f2b4d 0%, #1a3a6b 100%);
+    color: white;
+    padding: 20px 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.logo-area {
+    flex-shrink: 0;
+}
+
+.logo {
+    height: 60px;
+    width: auto;
+    object-fit: contain;
+}
+
+.title-area h1 {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.title-area p {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* ========== WELCOME PAGE ========== */
+.welcome-page {
+    padding: 40px 30px;
+}
+
+.welcome-content {
+    text-align: center;
+}
+
+.greeting {
+    margin-bottom: 20px;
+}
+
+.wave {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.greeting h2 {
+    font-size: 28px;
+    color: #1e3c72;
+}
+
+.subtitle {
+    font-size: 18px;
+    color: #2a5298;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.description {
+    color: #666;
+    margin-bottom: 25px;
+}
+
+.info-box {
+    background: #fff3e0;
+    border-left: 4px solid #ff9800;
+    padding: 12px 20px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 35px;
+}
+
+.info-icon {
+    font-size: 20px;
+}
+
+.info-box p {
+    color: #e67e22;
+    font-size: 14px;
+}
+
+.matkul-section h3 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.matkul-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.matkul-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 18px 20px;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.matkul-btn:hover {
+    background: #e8f0fe;
+    border-color: #2a5298;
+    transform: translateX(5px);
+}
+
+.matkul-icon {
+    font-size: 24px;
+    margin-right: 15px;
+}
+
+.matkul-name {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+}
+
+.arrow {
+    font-size: 20px;
+    color: #2a5298;
+}
+
+/* ========== PRESENSI PAGE ========== */
+.presensi-page {
+    padding: 30px;
+}
+
+.back-button {
+    margin-bottom: 20px;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    color: #2a5298;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.back-btn:hover {
+    text-decoration: underline;
+}
+
+.form-card {
+    background: #f8f9fa;
+    border-radius: 16px;
+    padding: 25px;
+}
+
+.selected-matkul {
+    background: #e8f0fe;
+    padding: 12px 15px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.selected-matkul .label {
+    font-weight: 600;
+    color: #1e3c72;
+}
+
+.selected-matkul .value {
+    font-weight: 700;
+    color: #2a5298;
+    margin-left: 8px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #2a5298;
+    box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+}
+
+/* ========== CAMERA SECTION ========== */
+.camera-section {
+    background: white;
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.camera-preview {
+    position: relative;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 15px;
+    aspect-ratio: 4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+canvas {
+    display: none;
+}
+
+.photo-result {
+    margin-top: 10px;
+    padding: 10px;
+    background: #e8f5e9;
+    border-radius: 8px;
+}
+
+.photo-result p {
+    color: #2e7d32;
+    font-size: 14px;
+}
+
+.btn-camera {
+    background: #ff9800;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+}
+
+.btn-camera:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-submit {
+    width: 100%;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.btn-submit:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* ========== STATUS MESSAGE ========== */
+.status {
+    margin-top: 20px;
+    padding: 12px;
+    border-radius: 10px;
+    display: none;
+    text-align: center;
+    font-weight: 500;
+}
+
+.status.success {
+    background: #d4edda;
+    color: #155724;
+    display: block;
+}
+
+.status.error {
+    background: #f8d7da;
+    color: #721c24;
+    display: block;
+}
+
+.status.loading {
+    background: #e2e3e5;
+    color: #383d41;
+    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.status.loading::before {
+    content: "⏳";
+    display: inline-block;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ========== FOOTER ========== */
+.footer {
+    background: #f8f9fa;
+    padding: 20px;
+    text-align: center;
+    border-top: 1px solid #e0e0e0;
+}
+
+.footer p {
+    color: #666;
+    font-size: 12px;
+}
+
+.footer-note {
+    font-size: 11px;
+    margin-top: 5px;
+    color: #999;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 600px) {
+    .header {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    
+    .welcome-page {
+        padding: 30px 20px;
+    }
+    
+    .greeting h2 {
+        font-size: 24px;
+    }
+    
+    .matkul-name {
+        font-size: 14px;
+    }
+    
+    .presensi-page {
+        padding: 20px;
+    }
+    
+    .form-card {
+        padding: 20px;
+    }
+}
