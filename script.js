@@ -1,12 +1,42 @@
 // ========== KONFIGURASI ==========
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwAv516IqJPrkPNf0R0iEe_XSo1rFPCUfD-EnW6Vh4aiqxZUwnYbPcYyUAvOLYCYVJ9Q/exec';
 
-// ========== JADWAL MATA KULIAH (dalam menit) ==========
+// ========== JADWAL MATA KULIAH (ATURAN BARU) ==========
+// Rumus:
+// - Buka akses: mulai - 25 menit
+// - Hadir: (mulai - 15 menit) sampai (mulai + 10 menit)
+// - Terlambat: (mulai + 10 menit) sampai (mulai + 20 menit)
+// - Tutup: lebih dari (mulai + 20 menit)
+
 const JADWAL = {
-    'Teknologi dan Rekayasa dalam Pembelajaran Fisika': { mulai: 600, hadirSampai: 650, telatSampai: 660 }, // 12:45
-    'Listrik Magnet': { mulai: 505, hadirSampai: 530, telatSampai: 540 }, // 21.30
-    'Gelombang Optik': { mulai: 765, hadirSampai: 790, telatSampai: 800 }, // 12:45
-    'Strategi Pembelajaran': { mulai: 840, hadirSampai: 890, telatSampai: 900 } // 09.15
+    'Teknologi dan Rekayasa dalam Pembelajaran Fisika': {
+        mulai: 13 * 60 + 0,      // 13:00 = 780 menit
+        buka: 12 * 60 + 35,      // 12:35 = 755 menit
+        hadirSampai: 13 * 60 + 10,   // 13:10 = 790 menit
+        telatSampai: 13 * 60 + 20,   // 13:20 = 800 menit
+        nama: "Teknologi dan Rekayasa dalam Pembelajaran Fisika"
+    },
+    'Listrik Magnet': {
+        mulai: 21 * 60 + 50,     // 21:50 = 1310 menit
+        buka: 21 * 60 + 25,      // 21:25 = 1285 menit
+        hadirSampai: 22 * 60 + 0,    // 22:00 = 1320 menit
+        telatSampai: 22 * 60 + 10,   // 22:10 = 1330 menit
+        nama: "Listrik Magnet"
+    },
+    'Gelombang Optik': {
+        mulai: 13 * 60 + 0,      // 13:00 = 780 menit
+        buka: 12 * 60 + 35,      // 12:35 = 755 menit
+        hadirSampai: 13 * 60 + 10,   // 13:10 = 790 menit
+        telatSampai: 13 * 60 + 20,   // 13:20 = 800 menit
+        nama: "Gelombang Optik"
+    },
+    'Strategi Pembelajaran': {
+        mulai: 9 * 60 + 30,      // 09:30 = 570 menit
+        buka: 9 * 60 + 5,        // 09:05 = 545 menit
+        hadirSampai: 9 * 60 + 40,    // 09:40 = 580 menit
+        telatSampai: 9 * 60 + 50,    // 09:50 = 590 menit
+        nama: "Strategi Pembelajaran"
+    }
 };
 
 // ========== VARIABEL GLOBAL ==========
@@ -49,43 +79,66 @@ function showWarningModal(msg) {
 
 function showSuccessModal(nim, nama, matkul, status) {
     const modalDetail = document.getElementById('modalDetail');
+    const now = new Date();
+    const waktuStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    
     if (modalDetail) {
-        modalDetail.innerHTML = `<strong>NIM:</strong> ${nim}<br><strong>Nama:</strong> ${nama}<br><strong>Mata Kuliah:</strong> ${matkul}<br><strong>Status:</strong> ${status}`;
+        modalDetail.innerHTML = `<strong>NIM:</strong> ${nim}<br><strong>Nama:</strong> ${nama}<br><strong>Mata Kuliah:</strong> ${matkul}<br><strong>Waktu:</strong> ${waktuStr}<br><strong>Status:</strong> ${status}`;
     }
     if (successModal) successModal.style.display = 'flex';
 }
 
+// ========== FORMAT WAKTU ==========
+function formatWaktu(menit) {
+    const jam = Math.floor(menit / 60);
+    const mnt = menit % 60;
+    return `${jam.toString().padStart(2, '0')}:${mnt.toString().padStart(2, '0')}`;
+}
+
+// ========== VALIDASI WAKTU (ATURAN BARU) ==========
+function validasiWaktu(matkul) {
+    const jadwal = JADWAL[matkul];
+    if (!jadwal) return { allowed: true, status: 'Hadir', message: '' };
+    
+    const now = new Date();
+    const menitSekarang = now.getHours() * 60 + now.getMinutes();
+    
+    // Cek sebelum buka akses (25 menit sebelum mulai)
+    if (menitSekarang < jadwal.buka) {
+        const pesan = `⏰ Presensi untuk ${jadwal.nama} dapat diakses mulai pukul ${formatWaktu(jadwal.buka)} (25 menit sebelum jadwal dimulai pukul ${formatWaktu(jadwal.mulai)}).`;
+        return { allowed: false, status: '', message: pesan };
+    }
+    
+    // Cek waktu hadir (buka akses sampai hadirSampai)
+    if (menitSekarang >= jadwal.buka && menitSekarang <= jadwal.hadirSampai) {
+        return { allowed: true, status: 'Hadir', message: '' };
+    }
+    
+    // Cek waktu terlambat (hadirSampai sampai telatSampai)
+    if (menitSekarang > jadwal.hadirSampai && menitSekarang <= jadwal.telatSampai) {
+        return { allowed: true, status: 'Terlambat', message: '⚠️ Anda terlambat! Presensi masih bisa dilakukan.' };
+    }
+    
+    // Cek setelah tutup
+    if (menitSekarang > jadwal.telatSampai) {
+        const pesan = `⏰ Presensi untuk ${jadwal.nama} sudah ditutup. Presensi hanya dibuka dari pukul ${formatWaktu(jadwal.buka)} sampai ${formatWaktu(jadwal.telatSampai)}.`;
+        return { allowed: false, status: '', message: pesan };
+    }
+    
+    return { allowed: true, status: 'Hadir', message: '' };
+}
+
 // ========== VALIDASI INPUT ==========
 function validasiNIM(nim) {
-    if (!/^\d+$/.test(nim)) { showStatus("NIM harus angka!", "error"); return false; }
-    if (nim.length !== 7) { showStatus("NIM harus 7 digit!", "error"); return false; }
+    if (!/^\d+$/.test(nim)) { showStatus("NIM harus berupa angka!", "error"); return false; }
+    if (nim.length !== 7) { showStatus("NIM harus 7 digit angka!", "error"); return false; }
     return true;
 }
 
 function validasiNama(nama) {
-    if (!/^[a-zA-Z\s\.]+$/.test(nama)) { showStatus("Nama harus huruf!", "error"); return false; }
-    if (nama.length < 3) { showStatus("Nama minimal 3 karakter!", "error"); return false; }
+    if (!/^[a-zA-Z\s\.]+$/.test(nama)) { showStatus("Nama harus berupa huruf!", "error"); return false; }
+    if (nama.length < 3) { showStatus("Nama lengkap minimal 3 karakter!", "error"); return false; }
     return true;
-}
-
-// ========== VALIDASI WAKTU ==========
-function validasiWaktu(matkul) {
-    const jadwal = JADWAL[matkul];
-    if (!jadwal) return { allowed: true, status: 'Hadir' };
-    
-    const now = new Date();
-    const menitSekarang = now.getHours() * 60 + now.getMinutes();
-    const buka = jadwal.mulai - 15;
-    
-    if (menitSekarang < buka) {
-        showWarningModal(`Presensi dapat diakses 15 menit sebelum jadwal dimulai (pukul ${Math.floor(buka/60)}:${buka%60 < 10 ? '0'+buka%60 : buka%60}).`);
-        return { allowed: false };
-    }
-    if (menitSekarang <= jadwal.hadirSampai) return { allowed: true, status: 'Hadir' };
-    if (menitSekarang <= jadwal.telatSampai) return { allowed: true, status: 'Terlambat' };
-    
-    showWarningModal(`Presensi sudah ditutup.`);
-    return { allowed: false };
 }
 
 // ========== KAMERA ==========
@@ -130,9 +183,17 @@ function resetForm() {
 
 // ========== NAVIGASI ==========
 function pilihMataKuliah(matkul) {
-    console.log("Tombol diklik:", matkul); // Cek di console browser
+    console.log("Tombol diklik:", matkul);
+    
     const validasi = validasiWaktu(matkul);
-    if (!validasi.allowed) return;
+    if (!validasi.allowed) {
+        showWarningModal(validasi.message);
+        return;
+    }
+    
+    if (validasi.message) {
+        showStatus(validasi.message, "warning");
+    }
     
     selectedMataKuliah = matkul;
     if (selectedMatkulSpan) selectedMatkulSpan.textContent = matkul;
@@ -152,14 +213,18 @@ function kembaliKeDaftar() {
 async function kirimPresensi() {
     const nim = nimInput?.value.trim();
     const nama = namaInput?.value.trim();
+    
     if (!validasiNIM(nim)) return;
     if (!validasiNama(nama)) return;
-    if (!fotoData) { showStatus("Ambil foto dulu!", "error"); return; }
+    if (!fotoData) { showStatus("Ambil foto selfie terlebih dahulu!", "error"); return; }
     
-    const waktu = validasiWaktu(selectedMataKuliah);
-    if (!waktu.allowed) return;
+    const validasi = validasiWaktu(selectedMataKuliah);
+    if (!validasi.allowed) {
+        showWarningModal(validasi.message);
+        return;
+    }
     
-    showStatus("Mengirim data...", "loading");
+    showStatus("⏳ Mengirim data presensi...", "loading");
     if (submitBtn) submitBtn.disabled = true;
     if (ambilFotoBtn) ambilFotoBtn.disabled = true;
     
@@ -170,7 +235,7 @@ async function kirimPresensi() {
     formData.append('mataKuliah', selectedMataKuliah);
     formData.append('foto', fotoData);
     formData.append('waktu', new Date().toISOString());
-    formData.append('status', waktu.status);
+    formData.append('status', validasi.status);
     
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: formData });
@@ -178,20 +243,20 @@ async function kirimPresensi() {
         console.log("Response:", result);
         
         if (result === 'SUKSES') {
-            showSuccessModal(nim, nama, selectedMataKuliah, waktu.status);
+            showSuccessModal(nim, nama, selectedMataKuliah, validasi.status);
             resetForm();
         } else if (result === 'DUPLICATE') {
-            showStatus("Anda sudah melakukan presensi!", "error");
+            showStatus("❌ Anda sudah melakukan presensi untuk mata kuliah ini.", "error");
             if (submitBtn) submitBtn.disabled = false;
             if (ambilFotoBtn) ambilFotoBtn.disabled = false;
         } else {
-            showStatus("Gagal: " + result, "error");
+            showStatus("❌ Presensi gagal: " + result, "error");
             if (submitBtn) submitBtn.disabled = false;
             if (ambilFotoBtn) ambilFotoBtn.disabled = false;
         }
     } catch (err) {
         console.error(err);
-        showStatus("Gagal mengirim data. Cek koneksi.", "error");
+        showStatus("❌ Gagal mengirim data. Cek koneksi internet.", "error");
         if (submitBtn) submitBtn.disabled = false;
         if (ambilFotoBtn) ambilFotoBtn.disabled = false;
     }
