@@ -3,10 +3,10 @@ const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwAv516IqJPr
 
 // ========== JADWAL MATA KULIAH (dalam menit) ==========
 const JADWAL = {
-    'Teknologi dan Rekayasa dalam Pembelajaran Fisika': { mulai: 600, hadirSampai: 650, telatSampai: 660 }, // 10:00
-    'Listrik Magnet': { mulai: 505, hadirSampai: 530, telatSampai: 540 }, // 08:25
+    'Teknologi dan Rekayasa dalam Pembelajaran Fisika': { mulai: 600, hadirSampai: 650, telatSampai: 660 }, // 12:45
+    'Listrik Magnet': { mulai: 505, hadirSampai: 530, telatSampai: 540 }, // 21.30
     'Gelombang Optik': { mulai: 765, hadirSampai: 790, telatSampai: 800 }, // 12:45
-    'Strategi Pembelajaran': { mulai: 840, hadirSampai: 890, telatSampai: 900 } // 14:00
+    'Strategi Pembelajaran': { mulai: 840, hadirSampai: 890, telatSampai: 900 } // 09.15
 };
 
 // ========== VARIABEL GLOBAL ==========
