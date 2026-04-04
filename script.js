@@ -1,32 +1,32 @@
 // ========== KONFIGURASI ==========
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZl4GoIvosdhfiUUL0FkQT01eLNscHS_o66yUrd0WIzK-wb2WWu0k3T3Z1Y2pcmOgpUQ/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwAv516IqJPrkPNf0R0iEe_XSo1rFPCUfD-EnW6Vh4aiqxZUwnYbPcYyUAvOLYCYVJ9Q/exec';
 
 // ========== JADWAL MATA KULIAH ==========
 // Format: { mulai: {jam, menit}, durasiMenitHadir, durasiMenitTelat }
 // Presensi bisa diakses 15 menit SEBELUM mulai
 const JADWAL_MATA_KULIAH = {
     'Teknologi dan Rekayasa dalam Pembelajaran Fisika': {
-        mulai: { jam: 10, menit: 0 },      // 12.45
-        durasiHadir: 50,                    // Hadir sampai 13.10
-        durasiTelat: 10,                    // Telat 13.10-13.20
+        mulai: { jam: 10, menit: 0 },
+        durasiHadir: 50,
+        durasiTelat: 10,
         nama: "Teknologi dan Rekayasa dalam Pembelajaran Fisika"
     },
     'Listrik Magnet': {
-        mulai: { jam: 8, menit: 25 },       // 21.15
-        durasiHadir: 25,                    // Hadir sampai 21.40
-        durasiTelat: 10,                    // Telat 21.40-21.50
+        mulai: { jam: 8, menit: 25 },
+        durasiHadir: 25,
+        durasiTelat: 10,
         nama: "Listrik Magnet"
     },
     'Gelombang Optik': {
-        mulai: { jam: 12, menit: 45 },      // 12:45
-        durasiHadir: 25,                    // Hadir sampai 13:10
-        durasiTelat: 10,                    // Telat 13:10-13:20
+        mulai: { jam: 12, menit: 45 },
+        durasiHadir: 25,
+        durasiTelat: 10,
         nama: "Gelombang Optik"
     },
     'Strategi Pembelajaran': {
-        mulai: { jam: 14, menit: 0 },       // 09:15
-        durasiHadir: 50,                    // Hadir sampai 09.40
-        durasiTelat: 10,                    // Telat 09.40-09.50
+        mulai: { jam: 14, menit: 0 },
+        durasiHadir: 50,
+        durasiTelat: 10,
         nama: "Strategi Pembelajaran"
     }
 };
@@ -56,7 +56,7 @@ const warningModal = document.getElementById('warningModal');
 const closeWarningBtn = document.getElementById('closeWarningBtn');
 const warningMessage = document.getElementById('warningMessage');
 
-// ========== FUNGSI VALIDASI WAKTU UNTUK SEMUA MATA KULIAH ==========
+// ========== FUNGSI VALIDASI WAKTU ==========
 function validasiWaktuPresensi(mataKuliah) {
     const jadwal = JADWAL_MATA_KULIAH[mataKuliah];
     if (!jadwal) {
@@ -68,42 +68,30 @@ function validasiWaktuPresensi(mataKuliah) {
     const menit = now.getMinutes();
     const waktuSekarang = jam * 60 + menit;
     
-    // Waktu mulai (dalam menit)
     const waktuMulai = jadwal.mulai.jam * 60 + jadwal.mulai.menit;
-    
-    // Waktu buka presensi (15 menit SEBELUM mulai)
     const waktuBuka = waktuMulai - 15;
-    
-    // Waktu hadir (mulai + durasiHadir)
     const waktuHadir = waktuMulai + jadwal.durasiHadir;
-    
-    // Waktu telat (waktuHadir + durasiTelat)
     const waktuTelat = waktuHadir + jadwal.durasiTelat;
     
-    // Format waktu untuk ditampilkan
     const formatWaktu = (menitTotal) => {
         const h = Math.floor(menitTotal / 60);
         const m = menitTotal % 60;
         return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
     };
     
-    // CASE 1: Sebelum waktu buka
     if (waktuSekarang < waktuBuka) {
         const pesan = `⏰ Presensi untuk ${jadwal.nama} dapat diakses mulai pukul ${formatWaktu(waktuBuka)} (15 menit sebelum jadwal dimulai pukul ${formatWaktu(waktuMulai)}).`;
         return { allowed: false, status: '', message: pesan };
     }
     
-    // CASE 2: Waktu hadir
     if (waktuSekarang >= waktuBuka && waktuSekarang <= waktuHadir) {
         return { allowed: true, status: 'Hadir', message: '' };
     }
     
-    // CASE 3: Waktu telat
     if (waktuSekarang > waktuHadir && waktuSekarang <= waktuTelat) {
         return { allowed: true, status: 'Terlambat', message: '⚠️ Anda terlambat! Presensi masih bisa dilakukan.' };
     }
     
-    // CASE 4: Setelah waktu telat
     if (waktuSekarang > waktuTelat) {
         const pesan = `⏰ Presensi untuk ${jadwal.nama} sudah ditutup. Presensi hanya dibuka dari pukul ${formatWaktu(waktuBuka)} sampai ${formatWaktu(waktuTelat)}.`;
         return { allowed: false, status: '', message: pesan };
@@ -112,13 +100,11 @@ function validasiWaktuPresensi(mataKuliah) {
     return { allowed: true, status: 'Hadir', message: '' };
 }
 
-// ========== TAMPILKAN PERINGATAN WAKTU ==========
 function showWarningModal(message) {
-    warningMessage.textContent = message;
-    warningModal.style.display = 'flex';
+    if (warningMessage) warningMessage.textContent = message;
+    if (warningModal) warningModal.style.display = 'flex';
 }
 
-// ========== VALIDASI NIM (ANGKA, 7 DIGIT) ==========
 function validasiNIM(nim) {
     if (!/^\d+$/.test(nim)) {
         showStatus("NIM harus berupa angka!", "error");
@@ -131,7 +117,6 @@ function validasiNIM(nim) {
     return true;
 }
 
-// ========== VALIDASI NAMA (HURUF DAN SPASI) ==========
 function validasiNama(nama) {
     if (!/^[a-zA-Z\s\.]+$/.test(nama)) {
         showStatus("Nama harus berupa huruf!", "error");
@@ -144,7 +129,6 @@ function validasiNama(nama) {
     return true;
 }
 
-// ========== LOAD FACE DETECTION MODEL ==========
 async function loadFaceDetectionModel() {
     if (typeof faceapi === 'undefined') {
         console.log("Face-api.js tidak terload");
@@ -159,14 +143,13 @@ async function loadFaceDetectionModel() {
         faceDetectionModelLoaded = true;
         console.log("Model deteksi wajah siap");
         setTimeout(() => {
-            statusDiv.style.display = 'none';
+            if (statusDiv) statusDiv.style.display = 'none';
         }, 2000);
     } catch (error) {
         console.error("Gagal load model:", error);
     }
 }
 
-// ========== DETEKSI WAJAH DARI FOTO ==========
 async function deteksiWajah(fotoBase64) {
     if (!faceDetectionModelLoaded || typeof faceapi === 'undefined') {
         return null;
@@ -199,26 +182,25 @@ async function deteksiWajah(fotoBase64) {
     }
 }
 
-// ========== TAMPILKAN MODAL SUKSES (TERIMA KASIH) ==========
 function showSuccessModal(nim, nama, mataKuliah, status) {
     const modalDetail = document.getElementById('modalDetail');
     const now = new Date();
     const waktuStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     
-    modalDetail.innerHTML = `
-        <strong>NIM:</strong> ${nim}<br>
-        <strong>Nama:</strong> ${nama}<br>
-        <strong>Mata Kuliah:</strong> ${mataKuliah}<br>
-        <strong>Waktu:</strong> ${waktuStr}<br>
-        <strong>Status:</strong> ${status}
-    `;
+    if (modalDetail) {
+        modalDetail.innerHTML = `
+            <strong>NIM:</strong> ${nim}<br>
+            <strong>Nama:</strong> ${nama}<br>
+            <strong>Mata Kuliah:</strong> ${mataKuliah}<br>
+            <strong>Waktu:</strong> ${waktuStr}<br>
+            <strong>Status:</strong> ${status}
+        `;
+    }
     
-    successModal.style.display = 'flex';
+    if (successModal) successModal.style.display = 'flex';
 }
 
-// ========== FUNGSI: PILIH MATA KULIAH ==========
 function pilihMataKuliah(matkul) {
-    // Validasi waktu sebelum masuk ke form
     const validasi = validasiWaktuPresensi(matkul);
     
     if (!validasi.allowed) {
@@ -231,30 +213,28 @@ function pilihMataKuliah(matkul) {
     }
     
     selectedMataKuliah = matkul;
-    selectedMatkulSpan.textContent = matkul;
+    if (selectedMatkulSpan) selectedMatkulSpan.textContent = matkul;
     
-    welcomePage.style.display = 'none';
-    presensiPage.style.display = 'block';
+    if (welcomePage) welcomePage.style.display = 'none';
+    if (presensiPage) presensiPage.style.display = 'block';
     
     resetForm();
     startCamera();
 }
 
-// ========== FUNGSI: KEMBALI KE DAFTAR ==========
 function kembaliKeDaftar() {
     if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
         videoStream = null;
     }
     
-    presensiPage.style.display = 'none';
-    welcomePage.style.display = 'block';
+    if (presensiPage) presensiPage.style.display = 'none';
+    if (welcomePage) welcomePage.style.display = 'block';
     
     fotoData = null;
     selectedMataKuliah = '';
 }
 
-// ========== FUNGSI: AKSES KAMERA ==========
 async function startCamera() {
     try {
         if (videoStream) {
@@ -264,69 +244,72 @@ async function startCamera() {
         videoStream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "user" }
         });
-        video.srcObject = videoStream;
-        await video.play();
+        if (video) video.srcObject = videoStream;
+        if (video) await video.play();
         
-        ambilFotoBtn.disabled = false;
+        if (ambilFotoBtn) ambilFotoBtn.disabled = false;
         
     } catch (error) {
         console.error("Error kamera:", error);
         showStatus("Tidak dapat mengakses kamera. Pastikan izin diberikan.", "error");
-        ambilFotoBtn.disabled = true;
+        if (ambilFotoBtn) ambilFotoBtn.disabled = true;
     }
 }
 
-// ========== FUNGSI: AMBIL FOTO ==========
 function ambilFoto() {
-    if (!video.videoWidth || !video.videoHeight) {
+    if (!video || !video.videoWidth || !video.videoHeight) {
         showStatus("Kamera belum siap. Tunggu sebentar.", "error");
         return;
     }
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    if (canvas) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        fotoData = canvas.toDataURL('image/jpeg', 0.5);
+    }
     
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    fotoData = canvas.toDataURL('image/jpeg', 0.5);
-    
-    photoResultDiv.style.display = 'block';
-    ambilFotoBtn.innerHTML = '✓ Foto Tersimpan';
-    ambilFotoBtn.style.background = '#4caf50';
+    if (photoResultDiv) photoResultDiv.style.display = 'block';
+    if (ambilFotoBtn) {
+        ambilFotoBtn.innerHTML = '✓ Foto Tersimpan';
+        ambilFotoBtn.style.background = '#4caf50';
+    }
     
     checkFormComplete();
 }
 
-// ========== FUNGSI: CEK KELENGKAPAN FORM ==========
 function checkFormComplete() {
-    const nim = nimInput.value.trim();
-    const nama = namaInput.value.trim();
+    const nim = nimInput ? nimInput.value.trim() : '';
+    const nama = namaInput ? namaInput.value.trim() : '';
     
     if (nim && nama && fotoData && selectedMataKuliah) {
-        submitBtn.disabled = false;
+        if (submitBtn) submitBtn.disabled = false;
     } else {
-        submitBtn.disabled = true;
+        if (submitBtn) submitBtn.disabled = true;
     }
 }
 
-// ========== FUNGSI: TAMPILKAN STATUS ==========
 function showStatus(message, type) {
+    if (!statusDiv) return;
     statusDiv.textContent = message;
     statusDiv.className = `status ${type}`;
     
     if (type !== 'loading') {
         setTimeout(() => {
-            statusDiv.style.display = 'none';
-            statusDiv.className = 'status';
+            if (statusDiv) {
+                statusDiv.style.display = 'none';
+                statusDiv.className = 'status';
+            }
         }, 5000);
     }
 }
 
-// ========== FUNGSI: KIRIM PRESENSI ==========
 async function kirimPresensi() {
-    const nim = nimInput.value.trim();
-    const nama = namaInput.value.trim();
+    const nim = nimInput ? nimInput.value.trim() : '';
+    const nama = namaInput ? namaInput.value.trim() : '';
     
     if (!validasiNIM(nim)) return false;
     if (!validasiNama(nama)) return false;
@@ -336,7 +319,6 @@ async function kirimPresensi() {
         return false;
     }
     
-    // Validasi waktu untuk mata kuliah yang dipilih
     const validasi = validasiWaktuPresensi(selectedMataKuliah);
     if (!validasi.allowed) {
         showWarningModal(validasi.message);
@@ -357,8 +339,8 @@ async function kirimPresensi() {
     
     showStatus("⏳ Mengirim data presensi...", "loading");
     
-    submitBtn.disabled = true;
-    ambilFotoBtn.disabled = true;
+    if (submitBtn) submitBtn.disabled = true;
+    if (ambilFotoBtn) ambilFotoBtn.disabled = true;
     
     const formData = new URLSearchParams();
     formData.append('action', 'submit');
@@ -390,34 +372,35 @@ async function kirimPresensi() {
             return true;
         } else if (result === 'DUPLICATE') {
             showStatus("❌ Anda sudah melakukan presensi untuk mata kuliah ini.", "error");
-            submitBtn.disabled = false;
-            ambilFotoBtn.disabled = false;
+            if (submitBtn) submitBtn.disabled = false;
+            if (ambilFotoBtn) ambilFotoBtn.disabled = false;
             return false;
         } else {
             showStatus("❌ Presensi gagal: " + result, "error");
-            submitBtn.disabled = false;
-            ambilFotoBtn.disabled = false;
+            if (submitBtn) submitBtn.disabled = false;
+            if (ambilFotoBtn) ambilFotoBtn.disabled = false;
             return false;
         }
         
     } catch (error) {
         console.error("Error saat mengirim:", error);
         showStatus("❌ Gagal mengirim data. Cek koneksi internet.", "error");
-        submitBtn.disabled = false;
-        ambilFotoBtn.disabled = false;
+        if (submitBtn) submitBtn.disabled = false;
+        if (ambilFotoBtn) ambilFotoBtn.disabled = false;
         return false;
     }
 }
 
-// ========== FUNGSI: RESET FORM ==========
 function resetForm() {
-    nimInput.value = '';
-    namaInput.value = '';
+    if (nimInput) nimInput.value = '';
+    if (namaInput) namaInput.value = '';
     fotoData = null;
-    photoResultDiv.style.display = 'none';
-    ambilFotoBtn.innerHTML = '📷 Ambil Foto';
-    ambilFotoBtn.style.background = '#ff9800';
-    submitBtn.disabled = true;
+    if (photoResultDiv) photoResultDiv.style.display = 'none';
+    if (ambilFotoBtn) {
+        ambilFotoBtn.innerHTML = '📷 Ambil Foto';
+        ambilFotoBtn.style.background = '#ff9800';
+    }
+    if (submitBtn) submitBtn.disabled = true;
     
     startCamera();
 }
@@ -425,4 +408,42 @@ function resetForm() {
 // ========== EVENT LISTENERS ==========
 document.querySelectorAll('.matkul-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        const matkul = btn.getAttribute('data-matkul
+        const matkul = btn.getAttribute('data-matkul');
+        pilihMataKuliah(matkul);
+    });
+});
+
+if (backBtn) backBtn.addEventListener('click', kembaliKeDaftar);
+if (nimInput) nimInput.addEventListener('input', checkFormComplete);
+if (namaInput) namaInput.addEventListener('input', checkFormComplete);
+if (ambilFotoBtn) ambilFotoBtn.addEventListener('click', ambilFoto);
+if (submitBtn) submitBtn.addEventListener('click', kirimPresensi);
+
+if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+        if (successModal) successModal.style.display = 'none';
+    });
+}
+
+if (closeWarningBtn) {
+    closeWarningBtn.addEventListener('click', () => {
+        if (warningModal) warningModal.style.display = 'none';
+    });
+}
+
+window.addEventListener('click', (e) => {
+    if (e.target === successModal && successModal) {
+        successModal.style.display = 'none';
+    }
+    if (e.target === warningModal && warningModal) {
+        warningModal.style.display = 'none';
+    }
+});
+
+// ========== INITIALISASI ==========
+if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showStatus("Browser Anda tidak mendukung akses kamera.", "error");
+    if (ambilFotoBtn) ambilFotoBtn.disabled = true;
+}
+
+loadFaceDetectionModel();
