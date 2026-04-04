@@ -1,13 +1,33 @@
 // ========== KONFIGURASI ==========
-// URL Google Apps Script Anda (SUDAH DIUPDATE)
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxl8bjvZzM_1FYgCVawLYitwFkDvLBVcf0fqKnyUQPQwvComAJmCuMVFh74sP13TP8pCQ/exec';
 
-// Konfigurasi waktu untuk Gelombang Optik
-const BATASAN_WAKTU = {
+// ========== JADWAL MATA KULIAH ==========
+// Format: { mulai: {jam, menit}, durasiMenitHadir, durasiMenitTelat }
+// Presensi bisa diakses 15 menit SEBELUM mulai
+const JADWAL_MATA_KULIAH = {
+    'Teknologi dan Rekayasa dalam Pembelajaran Fisika': {
+        mulai: { jam: 10, menit: 0 },      // 12.45
+        durasiHadir: 50,                    // Hadir sampai 13.10
+        durasiTelat: 10,                    // Telat 13.10-13.20
+        nama: "Teknologi dan Rekayasa dalam Pembelajaran Fisika"
+    },
+    'Listrik Magnet': {
+        mulai: { jam: 8, menit: 25 },       // 21.15
+        durasiHadir: 25,                    // Hadir sampai 21.40
+        durasiTelat: 10,                    // Telat 21.40-21.50
+        nama: "Listrik Magnet"
+    },
     'Gelombang Optik': {
-        mulaiHadir: { jam: 12, menit: 45 },      // 12:45
-        batasHadir: { jam: 13, menit: 10 },       // 13:10
-        batasTelat: { jam: 13, menit: 20 }        // 13:20
+        mulai: { jam: 12, menit: 45 },      // 12:45
+        durasiHadir: 25,                    // Hadir sampai 13:10
+        durasiTelat: 10,                    // Telat 13:10-13:20
+        nama: "Gelombang Optik"
+    },
+    'Strategi Pembelajaran': {
+        mulai: { jam: 14, menit: 0 },       // 09:15
+        durasiHadir: 50,                    // Hadir sampai 09.40
+        durasiTelat: 10,                    // Telat 09.40-09.50
+        nama: "Strategi Pembelajaran"
     }
 };
 
@@ -32,6 +52,71 @@ const statusDiv = document.getElementById('statusMessage');
 const backBtn = document.getElementById('backBtn');
 const successModal = document.getElementById('successModal');
 const closeModalBtn = document.getElementById('closeModalBtn');
+const warningModal = document.getElementById('warningModal');
+const closeWarningBtn = document.getElementById('closeWarningBtn');
+const warningMessage = document.getElementById('warningMessage');
+
+// ========== FUNGSI VALIDASI WAKTU UNTUK SEMUA MATA KULIAH ==========
+function validasiWaktuPresensi(mataKuliah) {
+    const jadwal = JADWAL_MATA_KULIAH[mataKuliah];
+    if (!jadwal) {
+        return { allowed: true, status: 'Hadir', message: '' };
+    }
+    
+    const now = new Date();
+    const jam = now.getHours();
+    const menit = now.getMinutes();
+    const waktuSekarang = jam * 60 + menit;
+    
+    // Waktu mulai (dalam menit)
+    const waktuMulai = jadwal.mulai.jam * 60 + jadwal.mulai.menit;
+    
+    // Waktu buka presensi (15 menit SEBELUM mulai)
+    const waktuBuka = waktuMulai - 15;
+    
+    // Waktu hadir (mulai + durasiHadir)
+    const waktuHadir = waktuMulai + jadwal.durasiHadir;
+    
+    // Waktu telat (waktuHadir + durasiTelat)
+    const waktuTelat = waktuHadir + jadwal.durasiTelat;
+    
+    // Format waktu untuk ditampilkan
+    const formatWaktu = (menitTotal) => {
+        const h = Math.floor(menitTotal / 60);
+        const m = menitTotal % 60;
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    };
+    
+    // CASE 1: Sebelum waktu buka
+    if (waktuSekarang < waktuBuka) {
+        const pesan = `⏰ Presensi untuk ${jadwal.nama} dapat diakses mulai pukul ${formatWaktu(waktuBuka)} (15 menit sebelum jadwal dimulai pukul ${formatWaktu(waktuMulai)}).`;
+        return { allowed: false, status: '', message: pesan };
+    }
+    
+    // CASE 2: Waktu hadir
+    if (waktuSekarang >= waktuBuka && waktuSekarang <= waktuHadir) {
+        return { allowed: true, status: 'Hadir', message: '' };
+    }
+    
+    // CASE 3: Waktu telat
+    if (waktuSekarang > waktuHadir && waktuSekarang <= waktuTelat) {
+        return { allowed: true, status: 'Terlambat', message: '⚠️ Anda terlambat! Presensi masih bisa dilakukan.' };
+    }
+    
+    // CASE 4: Setelah waktu telat
+    if (waktuSekarang > waktuTelat) {
+        const pesan = `⏰ Presensi untuk ${jadwal.nama} sudah ditutup. Presensi hanya dibuka dari pukul ${formatWaktu(waktuBuka)} sampai ${formatWaktu(waktuTelat)}.`;
+        return { allowed: false, status: '', message: pesan };
+    }
+    
+    return { allowed: true, status: 'Hadir', message: '' };
+}
+
+// ========== TAMPILKAN PERINGATAN WAKTU ==========
+function showWarningModal(message) {
+    warningMessage.textContent = message;
+    warningModal.style.display = 'flex';
+}
 
 // ========== VALIDASI NIM (ANGKA, 7 DIGIT) ==========
 function validasiNIM(nim) {
@@ -57,35 +142,6 @@ function validasiNama(nama) {
         return false;
     }
     return true;
-}
-
-// ========== VALIDASI WAKTU UNTUK GELOMBANG OPTIK ==========
-function validasiWaktuGelombangOptik() {
-    if (selectedMataKuliah !== 'Gelombang Optik') {
-        return { allowed: true, status: 'Hadir' };
-    }
-    
-    const now = new Date();
-    const jam = now.getHours();
-    const menit = now.getMinutes();
-    const waktuSekarang = jam * 60 + menit;
-    
-    const mulaiHadir = BATASAN_WAKTU['Gelombang Optik'].mulaiHadir.jam * 60 + BATASAN_WAKTU['Gelombang Optik'].mulaiHadir.menit;
-    const batasHadir = BATASAN_WAKTU['Gelombang Optik'].batasHadir.jam * 60 + BATASAN_WAKTU['Gelombang Optik'].batasHadir.menit;
-    const batasTelat = BATASAN_WAKTU['Gelombang Optik'].batasTelat.jam * 60 + BATASAN_WAKTU['Gelombang Optik'].batasTelat.menit;
-    
-    if (waktuSekarang < mulaiHadir) {
-        showStatus("Presensi untuk Gelombang Optik dimulai pukul 12:45!", "error");
-        return { allowed: false, status: '' };
-    } else if (waktuSekarang <= batasHadir) {
-        return { allowed: true, status: 'Hadir' };
-    } else if (waktuSekarang <= batasTelat) {
-        showStatus("Anda terlambat! Presensi masih bisa dilakukan.", "warning");
-        return { allowed: true, status: 'Terlambat' };
-    } else {
-        showStatus("Presensi Gelombang Optik sudah ditutup pukul 13:20!", "error");
-        return { allowed: false, status: '' };
-    }
 }
 
 // ========== LOAD FACE DETECTION MODEL ==========
@@ -143,18 +199,18 @@ async function deteksiWajah(fotoBase64) {
     }
 }
 
-// ========== TAMPILKAN MODAL SUKSES ==========
+// ========== TAMPILKAN MODAL SUKSES (TERIMA KASIH) ==========
 function showSuccessModal(nim, nama, mataKuliah, status) {
     const modalDetail = document.getElementById('modalDetail');
     const now = new Date();
     const waktuStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     
     modalDetail.innerHTML = `
-        NIM: ${nim}<br>
-        Nama: ${nama}<br>
-        Mata Kuliah: ${mataKuliah}<br>
-        Waktu: ${waktuStr}<br>
-        Status: ${status}
+        <strong>NIM:</strong> ${nim}<br>
+        <strong>Nama:</strong> ${nama}<br>
+        <strong>Mata Kuliah:</strong> ${mataKuliah}<br>
+        <strong>Waktu:</strong> ${waktuStr}<br>
+        <strong>Status:</strong> ${status}
     `;
     
     successModal.style.display = 'flex';
@@ -162,6 +218,18 @@ function showSuccessModal(nim, nama, mataKuliah, status) {
 
 // ========== FUNGSI: PILIH MATA KULIAH ==========
 function pilihMataKuliah(matkul) {
+    // Validasi waktu sebelum masuk ke form
+    const validasi = validasiWaktuPresensi(matkul);
+    
+    if (!validasi.allowed) {
+        showWarningModal(validasi.message);
+        return;
+    }
+    
+    if (validasi.message) {
+        showStatus(validasi.message, "warning");
+    }
+    
     selectedMataKuliah = matkul;
     selectedMatkulSpan.textContent = matkul;
     
@@ -268,8 +336,12 @@ async function kirimPresensi() {
         return false;
     }
     
-    const waktuValid = validasiWaktuGelombangOptik();
-    if (!waktuValid.allowed) return false;
+    // Validasi waktu untuk mata kuliah yang dipilih
+    const validasi = validasiWaktuPresensi(selectedMataKuliah);
+    if (!validasi.allowed) {
+        showWarningModal(validasi.message);
+        return false;
+    }
     
     showStatus("⏳ Memverifikasi wajah...", "loading");
     
@@ -295,7 +367,7 @@ async function kirimPresensi() {
     formData.append('mataKuliah', selectedMataKuliah);
     formData.append('foto', fotoData);
     formData.append('waktu', new Date().toISOString());
-    formData.append('status', waktuValid.status || 'Hadir');
+    formData.append('status', validasi.status);
     if (faceDescriptor) {
         formData.append('faceDescriptor', JSON.stringify(faceDescriptor));
     }
@@ -313,7 +385,7 @@ async function kirimPresensi() {
         console.log("Response:", result);
         
         if (result === 'SUKSES' || result.includes('SUKSES')) {
-            showSuccessModal(nim, nama, selectedMataKuliah, waktuValid.status || 'Hadir');
+            showSuccessModal(nim, nama, selectedMataKuliah, validasi.status);
             resetForm();
             return true;
         } else if (result === 'DUPLICATE') {
@@ -353,33 +425,4 @@ function resetForm() {
 // ========== EVENT LISTENERS ==========
 document.querySelectorAll('.matkul-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        const matkul = btn.getAttribute('data-matkul');
-        pilihMataKuliah(matkul);
-    });
-});
-
-backBtn.addEventListener('click', kembaliKeDaftar);
-nimInput.addEventListener('input', checkFormComplete);
-namaInput.addEventListener('input', checkFormComplete);
-ambilFotoBtn.addEventListener('click', ambilFoto);
-submitBtn.addEventListener('click', kirimPresensi);
-
-if (closeModalBtn) {
-    closeModalBtn.addEventListener('click', () => {
-        successModal.style.display = 'none';
-    });
-}
-
-window.addEventListener('click', (e) => {
-    if (e.target === successModal) {
-        successModal.style.display = 'none';
-    }
-});
-
-// ========== INITIALISASI ==========
-if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    showStatus("Browser Anda tidak mendukung akses kamera.", "error");
-    ambilFotoBtn.disabled = true;
-}
-
-loadFaceDetectionModel();
+        const matkul = btn.getAttribute('data-matkul
