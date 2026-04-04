@@ -1,5 +1,5 @@
 // ========== KONFIGURASI ==========
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxl8bjvZzM_1FYgCVawLYitwFkDvLBVcf0fqKnyUQPQwvComAJmCuMVFh74sP13TP8pCQ/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZl4GoIvosdhfiUUL0FkQT01eLNscHS_o66yUrd0WIzK-wb2WWu0k3T3Z1Y2pcmOgpUQ/exec';
 
 // ========== JADWAL MATA KULIAH ==========
 // Format: { mulai: {jam, menit}, durasiMenitHadir, durasiMenitTelat }
