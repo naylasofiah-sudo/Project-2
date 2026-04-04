@@ -1,13 +1,21 @@
 // ========== KONFIGURASI ==========
-// GANTI DENGAN URL APPS SCRIPT ANDA
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyK-A2uaMeRw1I1wYbYuSy_rIWN5yJmhWMp-0U2fbInkmt9RP4iw9jDL71G0PXCou-Qyw/exec';
+// URL Google Apps Script Anda (SUDAH DIUPDATE)
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxl8bjvZzM_1FYgCVawLYitwFkDvLBVcf0fqKnyUQPQwvComAJmCuMVFh74sP13TP8pCQ/exec';
+
+// Konfigurasi waktu untuk Gelombang Optik
+const BATASAN_WAKTU = {
+    'Gelombang Optik': {
+        mulaiHadir: { jam: 12, menit: 45 },      // 12:45
+        batasHadir: { jam: 13, menit: 10 },       // 13:10
+        batasTelat: { jam: 13, menit: 20 }        // 13:20
+    }
+};
 
 // ========== VARIABEL GLOBAL ==========
 let fotoData = null;
 let videoStream = null;
 let selectedMataKuliah = '';
 let faceDetectionModelLoaded = false;
-let currentFaceDescriptor = null;
 
 // ========== ELEMEN DOM ==========
 const welcomePage = document.getElementById('welcomePage');
@@ -22,9 +30,71 @@ const canvas = document.getElementById('canvas');
 const photoResultDiv = document.getElementById('photoResult');
 const statusDiv = document.getElementById('statusMessage');
 const backBtn = document.getElementById('backBtn');
+const successModal = document.getElementById('successModal');
+const closeModalBtn = document.getElementById('closeModalBtn');
+
+// ========== VALIDASI NIM (ANGKA, 7 DIGIT) ==========
+function validasiNIM(nim) {
+    if (!/^\d+$/.test(nim)) {
+        showStatus("NIM harus berupa angka!", "error");
+        return false;
+    }
+    if (nim.length !== 7) {
+        showStatus("NIM harus 7 digit angka!", "error");
+        return false;
+    }
+    return true;
+}
+
+// ========== VALIDASI NAMA (HURUF DAN SPASI) ==========
+function validasiNama(nama) {
+    if (!/^[a-zA-Z\s\.]+$/.test(nama)) {
+        showStatus("Nama harus berupa huruf!", "error");
+        return false;
+    }
+    if (nama.length < 3) {
+        showStatus("Nama lengkap minimal 3 karakter!", "error");
+        return false;
+    }
+    return true;
+}
+
+// ========== VALIDASI WAKTU UNTUK GELOMBANG OPTIK ==========
+function validasiWaktuGelombangOptik() {
+    if (selectedMataKuliah !== 'Gelombang Optik') {
+        return { allowed: true, status: 'Hadir' };
+    }
+    
+    const now = new Date();
+    const jam = now.getHours();
+    const menit = now.getMinutes();
+    const waktuSekarang = jam * 60 + menit;
+    
+    const mulaiHadir = BATASAN_WAKTU['Gelombang Optik'].mulaiHadir.jam * 60 + BATASAN_WAKTU['Gelombang Optik'].mulaiHadir.menit;
+    const batasHadir = BATASAN_WAKTU['Gelombang Optik'].batasHadir.jam * 60 + BATASAN_WAKTU['Gelombang Optik'].batasHadir.menit;
+    const batasTelat = BATASAN_WAKTU['Gelombang Optik'].batasTelat.jam * 60 + BATASAN_WAKTU['Gelombang Optik'].batasTelat.menit;
+    
+    if (waktuSekarang < mulaiHadir) {
+        showStatus("Presensi untuk Gelombang Optik dimulai pukul 12:45!", "error");
+        return { allowed: false, status: '' };
+    } else if (waktuSekarang <= batasHadir) {
+        return { allowed: true, status: 'Hadir' };
+    } else if (waktuSekarang <= batasTelat) {
+        showStatus("Anda terlambat! Presensi masih bisa dilakukan.", "warning");
+        return { allowed: true, status: 'Terlambat' };
+    } else {
+        showStatus("Presensi Gelombang Optik sudah ditutup pukul 13:20!", "error");
+        return { allowed: false, status: '' };
+    }
+}
 
 // ========== LOAD FACE DETECTION MODEL ==========
 async function loadFaceDetectionModel() {
+    if (typeof faceapi === 'undefined') {
+        console.log("Face-api.js tidak terload");
+        return;
+    }
+    
     showStatus("Memuat sistem deteksi wajah...", "loading");
     try {
         await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
@@ -34,18 +104,15 @@ async function loadFaceDetectionModel() {
         console.log("Model deteksi wajah siap");
         setTimeout(() => {
             statusDiv.style.display = 'none';
-            statusDiv.className = 'status';
         }, 2000);
     } catch (error) {
         console.error("Gagal load model:", error);
-        showStatus("Deteksi wajah tidak tersedia, presensi tetap bisa dilakukan", "error");
     }
 }
 
 // ========== DETEKSI WAJAH DARI FOTO ==========
 async function deteksiWajah(fotoBase64) {
-    if (!faceDetectionModelLoaded) {
-        console.log("Model deteksi wajah belum siap");
+    if (!faceDetectionModelLoaded || typeof faceapi === 'undefined') {
         return null;
     }
     
@@ -76,32 +143,21 @@ async function deteksiWajah(fotoBase64) {
     }
 }
 
-// ========== CEK APAKAH SUDAH PERNAH ABSEN ==========
-async function cekAbsenGanda(nim, mataKuliah, faceDescriptor) {
-    try {
-        const formData = new URLSearchParams();
-        formData.append('action', 'checkDuplicate');
-        formData.append('nim', nim);
-        formData.append('mataKuliah', mataKuliah);
-        if (faceDescriptor) {
-            formData.append('faceDescriptor', JSON.stringify(faceDescriptor));
-        }
-        
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: formData.toString()
-        });
-        
-        const result = await response.text();
-        return result === 'ALLOWED';
-        
-    } catch (error) {
-        console.error("Error cek absen ganda:", error);
-        return true;
-    }
+// ========== TAMPILKAN MODAL SUKSES ==========
+function showSuccessModal(nim, nama, mataKuliah, status) {
+    const modalDetail = document.getElementById('modalDetail');
+    const now = new Date();
+    const waktuStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    
+    modalDetail.innerHTML = `
+        NIM: ${nim}<br>
+        Nama: ${nama}<br>
+        Mata Kuliah: ${mataKuliah}<br>
+        Waktu: ${waktuStr}<br>
+        Status: ${status}
+    `;
+    
+    successModal.style.display = 'flex';
 }
 
 // ========== FUNGSI: PILIH MATA KULIAH ==========
@@ -204,29 +260,25 @@ async function kirimPresensi() {
     const nim = nimInput.value.trim();
     const nama = namaInput.value.trim();
     
-    if (!nim || !nama || !fotoData || !selectedMataKuliah) {
-        showStatus("Lengkapi semua data dan foto!", "error");
+    if (!validasiNIM(nim)) return false;
+    if (!validasiNama(nama)) return false;
+    
+    if (!fotoData) {
+        showStatus("Ambil foto selfie terlebih dahulu!", "error");
         return false;
     }
+    
+    const waktuValid = validasiWaktuGelombangOptik();
+    if (!waktuValid.allowed) return false;
     
     showStatus("⏳ Memverifikasi wajah...", "loading");
     
     let faceDescriptor = null;
     
-    if (faceDetectionModelLoaded) {
+    if (faceDetectionModelLoaded && typeof faceapi !== 'undefined') {
         faceDescriptor = await deteksiWajah(fotoData);
-        
         if (!faceDescriptor) {
-            showStatus("Wajah tidak terdeteksi. Pastikan foto selfie jelas dan pencahayaan cukup.", "error");
-            return false;
-        }
-        
-        showStatus("⏳ Mengecek riwayat presensi...", "loading");
-        
-        const isAllowed = await cekAbsenGanda(nim, selectedMataKuliah, faceDescriptor);
-        
-        if (!isAllowed) {
-            showStatus("❌ Anda sudah melakukan presensi untuk mata kuliah ini.", "error");
+            showStatus("Wajah tidak terdeteksi. Pastikan foto selfie jelas.", "error");
             return false;
         }
     }
@@ -243,6 +295,7 @@ async function kirimPresensi() {
     formData.append('mataKuliah', selectedMataKuliah);
     formData.append('foto', fotoData);
     formData.append('waktu', new Date().toISOString());
+    formData.append('status', waktuValid.status || 'Hadir');
     if (faceDescriptor) {
         formData.append('faceDescriptor', JSON.stringify(faceDescriptor));
     }
@@ -260,7 +313,7 @@ async function kirimPresensi() {
         console.log("Response:", result);
         
         if (result === 'SUKSES' || result.includes('SUKSES')) {
-            showStatus("✅ Presensi berhasil! Data telah tersimpan.", "success");
+            showSuccessModal(nim, nama, selectedMataKuliah, waktuValid.status || 'Hadir');
             resetForm();
             return true;
         } else if (result === 'DUPLICATE') {
@@ -311,11 +364,22 @@ namaInput.addEventListener('input', checkFormComplete);
 ambilFotoBtn.addEventListener('click', ambilFoto);
 submitBtn.addEventListener('click', kirimPresensi);
 
+if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+        successModal.style.display = 'none';
+    });
+}
+
+window.addEventListener('click', (e) => {
+    if (e.target === successModal) {
+        successModal.style.display = 'none';
+    }
+});
+
 // ========== INITIALISASI ==========
 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    showStatus("Browser Anda tidak mendukung akses kamera. Gunakan Chrome, Firefox, atau Safari.", "error");
+    showStatus("Browser Anda tidak mendukung akses kamera.", "error");
     ambilFotoBtn.disabled = true;
 }
 
-// Load model deteksi wajah
 loadFaceDetectionModel();
