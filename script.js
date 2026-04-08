@@ -17,10 +17,10 @@ const JADWAL = {
         nama: "Teknologi dan Rekayasa dalam Pembelajaran Fisika"
     },
     'Listrik Magnet': {
-        mulai: 14 * 60 + 0,     // 14:00 = 840 menit
-        buka: 13 * 60 + 35,      // 13:35 = 815 menit
-        hadirSampai: 14 * 60 + 10,    // 14:10 = 850 menit
-        telatSampai: 14 * 60 + 20,   // 14:20 = 860 menit
+        mulai: 14 * 60 + 25,     // 14:25 = 865 menit
+        buka: 14 * 60 + 0,      // 14:00 = 840 menit
+        hadirSampai: 14 * 60 + 35,    // 14:35 = 875 menit
+        telatSampai: 14 * 60 + 45,   // 14:45 = 885 menit
         nama: "Listrik Magnet"
     },
     'Gelombang Optik': {
