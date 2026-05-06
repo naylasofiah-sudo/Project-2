@@ -10,10 +10,10 @@ const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwAv516IqJPr
 
 const JADWAL = {
     'Teknologi dan Rekayasa dalam Pembelajaran Fisika': {
-        mulai: 13 * 60 + 0,      // 13:00 = 780 menit
-        buka: 12 * 60 + 35,      // 12:35 = 755 menit
-        hadirSampai: 13 * 60 + 10,   // 13:10 = 790 menit
-        telatSampai: 13 * 60 + 20,   // 13:20 = 800 menit
+        mulai: 13 * 60 +30,      // 13:30 = 810 menit
+        buka: 13 * 60 + 05,      // 13 : 05 = 785 menit
+        hadirSampai: 13 * 60 + 40,   // 13:40= 820 menit
+        telatSampai: 13 * 60 + 50,   // 13:50 = 830 menit
         nama: "Teknologi dan Rekayasa dalam Pembelajaran Fisika"
     },
     'Listrik Magnet': {
